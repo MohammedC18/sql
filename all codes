@@ -1,0 +1,132 @@
+-- 1. Create Database
+CREATE DATABASE University;
+
+-- 2. Use Database
+USE University;
+
+-- 3. Create Tables with DDL Commands and Integrity Constraints
+CREATE TABLE Students (
+    StudentID INT PRIMARY KEY,           -- Primary Key
+    Name VARCHAR(100) NOT NULL,          -- Name cannot be NULL
+    Age INT CHECK (Age > 0),             -- Age constraint
+    Major VARCHAR(50)                    -- Major field
+);
+
+CREATE TABLE Courses (
+    CourseID INT PRIMARY KEY,            -- Primary Key
+    CourseName VARCHAR(100) NOT NULL,    -- CourseName cannot be NULL
+    Credits INT CHECK (Credits > 0)      -- Credits constraint
+);
+
+CREATE TABLE Enrollment (
+    EnrollmentID INT PRIMARY KEY,        -- Primary Key
+    StudentID INT,                       -- Foreign Key for Students
+    CourseID INT,                        -- Foreign Key for Courses
+    EnrollmentDate DATE,                 -- Enrollment Date field
+    FOREIGN KEY (StudentID) REFERENCES Students(StudentID), -- Foreign Key Constraint
+    FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)     -- Foreign Key Constraint
+);
+
+-- 4. Insert Data into Tables (DML Commands)
+INSERT INTO Students (StudentID, Name, Age, Major)
+VALUES (1, 'Alice', 21, 'Computer Science'),
+       (2, 'Bob', 22, 'Mathematics'),
+       (3, 'Charlie', 20, 'Computer Science');  -- Insert initial records into Students
+
+INSERT INTO Courses (CourseID, CourseName, Credits)
+VALUES (101, 'Database Systems', 4),
+       (102, 'Algorithms', 3);           -- Insert initial records into Courses
+
+INSERT INTO Enrollment (EnrollmentID, StudentID, CourseID, EnrollmentDate)
+VALUES (1, 1, 101, '2024-01-10'),
+       (2, 2, 102, '2024-01-11');        -- Insert initial records into Enrollment
+
+-- 5. Select Data from Tables
+SELECT * FROM Students;                  -- Select all records from Students
+
+-- 6. Update Data in Tables
+UPDATE Students SET Age = 23 WHERE StudentID = 1;  -- Update Age for StudentID 1
+
+-- 7. Delete Data from Tables
+DELETE FROM Students WHERE StudentID = 3;          -- Delete record with StudentID 3
+
+-- 8. Grant and Revoke Privileges
+GRANT SELECT ON University.Students TO 'user1'@'localhost';   -- Grant SELECT privilege to user1
+REVOKE SELECT ON University.Students FROM 'user1'@'localhost';-- Revoke SELECT privilege from user1
+
+-- 9. Inner Join Example
+SELECT Students.Name, Courses.CourseName
+FROM Students
+INNER JOIN Enrollment ON Students.StudentID = Enrollment.StudentID
+INNER JOIN Courses ON Enrollment.CourseID = Courses.CourseID;
+
+-- 10. Left Join Example
+SELECT Students.Name, Courses.CourseName
+FROM Students
+LEFT JOIN Enrollment ON Students.StudentID = Enrollment.StudentID
+LEFT JOIN Courses ON Enrollment.CourseID = Courses.CourseID;
+
+-- 11. Right Join Example
+SELECT Students.Name, Courses.CourseName
+FROM Students
+RIGHT JOIN Enrollment ON Students.StudentID = Enrollment.StudentID
+RIGHT JOIN Courses ON Enrollment.CourseID = Courses.CourseID;
+
+-- 12. Self Join Example
+SELECT S1.Name AS Student1, S2.Name AS Student2
+FROM Students S1
+INNER JOIN Students S2 ON S1.Major = S2.Major AND S1.StudentID != S2.StudentID;
+
+-- 13. Complex Query (Subquery)
+SELECT Name FROM Students WHERE StudentID IN (
+    SELECT StudentID FROM Enrollment GROUP BY StudentID HAVING COUNT(CourseID) > 1
+);  -- Find students enrolled in more than one course
+
+-- 14. Create Trigger
+CREATE TRIGGER log_student_insert
+AFTER INSERT ON Students
+FOR EACH ROW
+BEGIN
+    INSERT INTO LogTable (Description) VALUES ('New student added');
+END;
+
+-- 15. Create Cursor Example
+DECLARE cursor_name CURSOR FOR SELECT Name FROM Students; -- Declare Cursor
+OPEN cursor_name;                                         -- Open Cursor
+FETCH cursor_name INTO @name;                             -- Fetch first row
+CLOSE cursor_name;                                        -- Close Cursor
+
+-- 16. Create Stored Procedure
+CREATE PROCEDURE GetStudentAge (IN StudentID INT, OUT Age INT)
+BEGIN
+    SELECT Age INTO Age FROM Students WHERE StudentID = StudentID;
+END;
+
+-- 17. Create Function
+CREATE FUNCTION GetTotalCredits (StudentID INT) RETURNS INT
+BEGIN
+    DECLARE total INT;                                   -- Declare variable
+    SELECT SUM(Credits) INTO total FROM Enrollment WHERE StudentID = StudentID;
+    RETURN total;                                        -- Return total credits
+END;
+
+-- 18. Start Transaction
+START TRANSACTION;
+
+-- 19. Update Data within Transaction
+UPDATE Students SET Age = 24 WHERE StudentID = 1;
+
+-- 20. Commit Transaction
+COMMIT;
+
+-- 21. Rollback Transaction Example
+START TRANSACTION;                                       -- Start another transaction
+UPDATE Students SET Age = 30 WHERE StudentID = 1;        -- Temporary update
+ROLLBACK;                                                -- Roll back changes
+
+-- 22. Lock Tables Example
+LOCK TABLES Students WRITE;                              -- Lock table for writing
+
+UPDATE Students SET Age = 25 WHERE StudentID = 1;        -- Update within lock
+
+UNLOCK TABLES;                                           -- Unlock tables
